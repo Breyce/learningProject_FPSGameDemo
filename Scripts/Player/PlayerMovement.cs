@@ -7,6 +7,8 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     public GameObject point;
+    public GameObject Gun;
+
     [Header("Animator Controller")]
     public bool isRun;
     public bool isWalk;
@@ -29,6 +31,7 @@ public class PlayerMovement : MonoBehaviour
     public float crouchSpeed;
     public float crouchYScale;
     private float startYScale;
+    private bool isCrouching;
 
     [Header("Slope Handling")]
     public float maxSlopeAngle;
@@ -104,6 +107,7 @@ public class PlayerMovement : MonoBehaviour
      * MyInput()：处理按键输入并执行相应功能；
      * MovePlayer()：移动玩家，根据是否在地面或者是否在斜坡上进行判定；
      * SpeedControl()：限制移动速度，根据在斜坡上或者在地面上对最大速度进行限制。
+     * CanCrouch()：判断玩家是否处于下蹲状态，或者是否可以下蹲。
      */
     private void MyInput()
     {
@@ -123,24 +127,45 @@ public class PlayerMovement : MonoBehaviour
         //处理下蹲功能
         bool isCanCrouch = CanCrouch();
 
-        Debug.Log(isCanCrouch);
+        //Debug.Log(isCanCrouch);
 
         if (Input.GetKeyDown(crouchKey))
         {
             transform.localScale = new Vector3(transform.localScale.x, crouchYScale, transform.localScale.z);
+            Gun.transform.localScale = new Vector3(
+                transform.localScale.x / transform.localScale.x,
+                startYScale / transform.localScale.y,
+                transform.localScale.z / transform.localScale.z
+            );
             thRB.AddForce(Vector3.down * 5f, ForceMode.Impulse);
+            isCrouching = true;
         } 
         else if (Input.GetKeyUp(crouchKey) && isCanCrouch)
         {
             transform.localScale = new Vector3(transform.localScale.x, startYScale, transform.localScale.z);
+            Gun.transform.localScale = new Vector3(
+                transform.localScale.x / transform.localScale.x,
+                startYScale / transform.localScale.y,
+                transform.localScale.z / transform.localScale.z
+            );
+            isCrouching = false;
         } 
         else if (!Input.GetKey(crouchKey))
         {
-            if(isCanCrouch)
+            if (isCanCrouch)
+            {
                 transform.localScale = new Vector3(transform.localScale.x, startYScale, transform.localScale.z);
-            else if(!isCanCrouch && transform.localScale.y == crouchYScale)
+                Gun.transform.localScale = new Vector3(
+                    transform.localScale.x / transform.localScale.x,
+                    startYScale / transform.localScale.y,
+                    transform.localScale.z / transform.localScale.z
+                );
+                isCrouching = false;
+            }
+            else if (!isCanCrouch && transform.localScale.y == crouchYScale)
             {
                 moveSpeed = crouchSpeed;
+                isCrouching = true;
             }
         }
 
@@ -166,11 +191,31 @@ public class PlayerMovement : MonoBehaviour
         if (grounded)
         {
             thRB.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
+
+            if ((thRB.velocity).sqrMagnitude > 0.9f)
+            {
+                if (moveSpeed > walkSpeed)
+                {
+                    AudioManager.instance.PlaySoundEffect(0);
+                    //PlayerAnimController.instance.PlayerMovement(2);
+                }
+                else if (moveSpeed > crouchSpeed)
+                {
+                    AudioManager.instance.PlaySoundEffect(1);
+                    //PlayerAnimController.instance.PlayerMovement(1);
+                }
+            }
+            else
+            {
+                AudioManager.instance.PauseSoundEffect();
+                //PlayerAnimController.instance.PlayerMovement(0);
+            }
         }
         //在空中
         else if (!grounded)
         {
             thRB.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
+            AudioManager.instance.PauseSoundEffect();
         }
 
         //让玩家不会顺着斜坡滑落
@@ -224,7 +269,7 @@ public class PlayerMovement : MonoBehaviour
             state = MovementState.crouching;
             moveSpeed = crouchSpeed;
         }
-        else if (grounded && Input.GetKey(sprintKey))
+        else if (grounded && Input.GetKey(sprintKey) && !isCrouching)
         {
             state = MovementState.sprinting;
             moveSpeed = sprintSpeed;
@@ -247,6 +292,10 @@ public class PlayerMovement : MonoBehaviour
      */
     private void Jump()
     {
+        bool isCanCrouch = CanCrouch();
+
+        if (!isCanCrouch) { return; }
+
         exitingSlope = true;
 
         //重置y值
