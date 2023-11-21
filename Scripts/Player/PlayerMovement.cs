@@ -17,7 +17,6 @@ public class PlayerMovement : MonoBehaviour
     private float moveSpeed;
     public float walkSpeed;
     public float sprintSpeed;
-
     public float groundDrag;
 
     [Header("Jumping")]
@@ -53,9 +52,9 @@ public class PlayerMovement : MonoBehaviour
     float horizontalInput;
     float verticalInput;
 
-    Vector3 moveDirection;
+    public Vector3 moveDirection;
 
-    Rigidbody thRB;
+    public Rigidbody thRB;
 
     //ÒÆ¶¯×´Ì¬
     public MovementState state;
@@ -73,8 +72,10 @@ public class PlayerMovement : MonoBehaviour
         thRB.freezeRotation = true;
         
         readyToJump = true;
+        isRun = false;
+        isWalk = false;
 
-        startYScale = transform.localScale.y;
+    startYScale = transform.localScale.y;
     }
 
     void Update()
@@ -197,18 +198,21 @@ public class PlayerMovement : MonoBehaviour
                 if (moveSpeed > walkSpeed)
                 {
                     AudioManager.instance.PlaySoundEffect(0);
-                    //PlayerAnimController.instance.PlayerMovement(2);
+                    isRun = true;
+                    isWalk = false;
                 }
                 else if (moveSpeed > crouchSpeed)
                 {
                     AudioManager.instance.PlaySoundEffect(1);
-                    //PlayerAnimController.instance.PlayerMovement(1);
+                    isRun = false;
+                    isWalk = true;
                 }
             }
             else
             {
                 AudioManager.instance.PauseSoundEffect();
-                //PlayerAnimController.instance.PlayerMovement(0);
+                isRun = false;
+                isWalk = false;
             }
         }
         //ÔÚ¿ÕÖÐ

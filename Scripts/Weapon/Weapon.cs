@@ -8,7 +8,7 @@ public abstract class Weapon : MonoBehaviour
 
     public abstract void Reload();
 
-    public abstract void ExpaningCrossUpdate(float expanDegree);
+    public abstract void ExpandingCrossUpdate(float expanDegree);
 
     public abstract void DoReloadAnimation();
 

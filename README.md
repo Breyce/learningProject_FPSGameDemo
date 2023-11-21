@@ -127,4 +127,57 @@
    }
    ```
 
+
+
+
+## Development Day 3 & 4: 2023.11.20 / 21
+
+1. 子弹打到准心，这件事情说难也难，说简单也简单。我想着有这么几个实现办法：将子弹往镜头中心发出的射线碰到的地方（target）飞过去，但是这个就有一个问题，就是在近距离的时候有可能是达不到目标所在位置的，因为飞过去的路径上可能被别的实体挡住。毕竟shootPoint和target之间的连线可能会有别的物体。有可能被挡下。这个方法PASS。我用的方法是把shootPoint和Camera的中心放在一条直线上，或者不在一条直线上，但是不断地调整位置，另其最终实现效果在一个位置上，简单点的方法就是把shootPoint和Camera放在一个父物体下，然后再去编辑其他的位置问题。
+
+2. 可以在动画状态机当中添加脚本来给动画添加额外的代码操作。脚本继承的是`StateMachineBehaviour`类
+
+   `StateMachineBehaviour`是一个可添加到状态机状态的组件。它是一个基类，所有状态脚本都派生自这个类。
+
+   `animator.ResetTrigger(signal)`：可以重置触发信号，避免重复执行同一段动画。
+
+   ```C#
+   using System.Collections;
+   using System.Collections.Generic;
+   using UnityEngine;
    
+   public class FSMClearSignals : StateMachineBehaviour
+   {
+       // OnStateEnter is called when a transition starts and the state machine starts to evaluate this state
+       //override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+       //{
+       //    
+       //}
+   
+       // OnStateUpdate is called on each Update frame between OnStateEnter and OnStateExit callbacks
+       //override public void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+       //{
+       //    
+       //}
+   
+       // OnStateExit is called when a transition ends and the state machine finishes evaluating this state
+       //override public void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+       //{
+       //    
+       //}
+   
+       // OnStateMove is called right after Animator.OnAnimatorMove()
+       //override public void OnStateMove(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+       //{
+       //    // Implement code that processes and affects root motion
+       //}
+   
+       // OnStateIK is called right after Animator.OnAnimatorIK()
+       //override public void OnStateIK(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+       //{
+       //    // Implement code that sets up animation IK (inverse kinematics)
+       //}
+   }
+   
+   ```
+
+3. `Mathf.SmoothDamp()`：用于实现平滑移动目标的功能。
