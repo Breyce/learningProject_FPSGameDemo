@@ -20,7 +20,8 @@ public class SoundClips
 
 public class Weapon_AutomaticGun : Weapon
 {
-    private PlayerMovement player;
+    private GameObject player;
+    private PlayerMovement componentPlayer;
     private Animator anim;
 
     [Header("Amming")]
@@ -54,6 +55,7 @@ public class Weapon_AutomaticGun : Weapon
     private float originRate; //原始射速
     private float fireTimer; //计时器控制射速
     private float bulletForce; //子弹发射的力
+    public bool isSilence; // 枪械是否装载消音器
     private bool gunShoot;
     private bool isReload;
     private bool isAmming;
@@ -96,7 +98,10 @@ public class Weapon_AutomaticGun : Weapon
 
         //获取组件
         mainAudioSource = GetComponent<AudioSource>();
-        player = GetComponentInParent<PlayerMovement>();
+
+        player = GameObject.Find("Player");
+        componentPlayer = player .GetComponent<PlayerMovement>();
+
         anim = GetComponent<Animator>();
         mainCamera = Camera.main;
 
@@ -142,11 +147,11 @@ public class Weapon_AutomaticGun : Weapon
         }
 
         //控制准心
-        state = player.state;
+        state = componentPlayer.state;
         if(state == PlayerMovement.MovementState.walking 
             && state != PlayerMovement.MovementState.sprinting 
             && state != PlayerMovement.MovementState.crouching
-            && player.thRB.velocity.sqrMagnitude > 0.9f )
+            && componentPlayer.thRB.velocity.sqrMagnitude > 0.9f )
         {
             //移动时的准心开合度
             ExpandingCrossUpdate(crossExpanedDegree);
@@ -154,7 +159,7 @@ public class Weapon_AutomaticGun : Weapon
         else if(state != PlayerMovement.MovementState.walking
             && state == PlayerMovement.MovementState.sprinting
             && state != PlayerMovement.MovementState.crouching
-            && player.thRB.velocity.sqrMagnitude > 0.9f)
+            && componentPlayer.thRB.velocity.sqrMagnitude > 0.9f)
         {
             //奔跑时的准心开合度
             ExpandingCrossUpdate(crossExpanedDegree * 2);
@@ -166,8 +171,8 @@ public class Weapon_AutomaticGun : Weapon
         }
 
         //实现玩家移动动画
-        anim.SetBool("isRun", player.isRun);
-        anim.SetBool("isWalk", player.isWalk);
+        anim.SetBool("isRun", componentPlayer.isRun);
+        anim.SetBool("isWalk", componentPlayer.isWalk);
 
         //实现查看操作
         if (Input.GetKeyDown(inspectGun))
@@ -201,7 +206,7 @@ public class Weapon_AutomaticGun : Weapon
         //瞄准和射击的精度不同
         SpreadFactor = (isAmming) ? 0.01f : 0.1f;
 
-        if(Input.GetMouseButton(1) && !isReload && !player.isRun)
+        if(Input.GetMouseButton(1) && !isReload && !componentPlayer.isRun)
         {
             //瞄准：1. 准星消失； 2. 视野靠前
             isAmming = true;
@@ -241,7 +246,7 @@ public class Weapon_AutomaticGun : Weapon
     public override void GunFire()
     {
         if (fireTimer < fireRate 
-            || player.isRun
+            || componentPlayer.isRun
             || currentBullet <= 0 
             || anim.GetCurrentAnimatorStateInfo(0).IsName("takeOutWapon")
             || anim.GetCurrentAnimatorStateInfo(0).IsName("inspectWeapon")
@@ -252,7 +257,7 @@ public class Weapon_AutomaticGun : Weapon
         StartCoroutine(Shoot_Cross());
 
         // 播放射击音效和火光和粒子
-        mainAudioSource.clip = GunSound.shootSound;
+        mainAudioSource.clip = isSilence ? GunSound.shootSound_Silencer : GunSound.shootSound; //切换射击音效
         mainAudioSource.Play();
         muzzleFlash.Emit(1);
         muzzleSpark.Emit(Random.Range(minSparkEmission, maxSparkEmission));
@@ -279,7 +284,7 @@ public class Weapon_AutomaticGun : Weapon
         }
         else
         {
-            //播放瞄准状态下的开活动画
+            //播放瞄准状态下的开火动画
             anim.Play("aimFire", 0, 0);
         }
 
@@ -309,7 +314,9 @@ public class Weapon_AutomaticGun : Weapon
     public override void AimIn()
     {
         float currentVelocity = 0.1f;
+
         //准星消失
+        Debug.Log("准星消失");
         for (int i = 0; i < crossQuarterImges.Length; i++)
         {
             crossQuarterImges[i].gameObject.SetActive(false);
@@ -325,7 +332,9 @@ public class Weapon_AutomaticGun : Weapon
     public override void AimOut()
     {
         float currentVelocity = 0.1f;
+
         //准星出现
+        Debug.Log("准星出现");
         for (int i = 0; i < crossQuarterImges.Length; i++)
         {
             crossQuarterImges[i].gameObject.SetActive(true);
