@@ -357,7 +357,7 @@ public class Weapon_AutomaticGun : Weapon
         if(gameObject.name == "4")
         {
             scopeRenderMaterial.color = defaultColor;
-            gunCamera.fieldOfView = 15;
+            gunCamera.fieldOfView = 30;
         }
 
         //改变视野，视野变近
