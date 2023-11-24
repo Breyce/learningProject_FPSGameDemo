@@ -56,6 +56,8 @@ public class PlayerMovement : MonoBehaviour
 
     public Rigidbody thRB;
 
+    private Inventory inventory;
+
     //移动状态
     public MovementState state;
     public enum MovementState
@@ -69,13 +71,15 @@ public class PlayerMovement : MonoBehaviour
     void Start()
     {
         thRB = GetComponent<Rigidbody>();
+        inventory = GameObject.Find("Inventory").GetComponent<Inventory>();
+
         thRB.freezeRotation = true;
-        
+
         readyToJump = true;
         isRun = false;
         isWalk = false;
 
-    startYScale = transform.localScale.y;
+        startYScale = transform.localScale.y;
     }
 
     void Update()
@@ -337,5 +341,28 @@ public class PlayerMovement : MonoBehaviour
         return Vector3.ProjectOnPlane(moveDirection, slopeHit.normal).normalized;
     }
 
+    /// <summary>
+    /// 拾取武器
+    /// </summary>
+    public void PickUpWeapon(int itemID, GameObject weapon)
+    {
+        Debug.Log("调用了");
+        /* 捡到武器之后，在武器库里添加，否则补充备弹 */
+        if (inventory.weapons.Contains(weapon))
+        {
+            weapon.GetComponent<Weapon_AutomaticGun>().bulletLeft = weapon.GetComponent<Weapon_AutomaticGun>().bulletMag * 5;
 
+            weapon.GetComponent<Weapon_AutomaticGun>().UpdateAmmoUI();
+            Debug.Log("武器库里已经包含此枪械");
+            return;
+        }
+        else if(inventory.weapons.Count == 3)
+        {
+            return;
+        }
+        else
+        {
+            inventory.AddWeapon(weapon);
+        }
+    }
 }

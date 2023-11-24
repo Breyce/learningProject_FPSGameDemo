@@ -15,6 +15,9 @@ public class SoundClips
     public AudioClip shootSound_Silencer;
     public AudioClip reloadSoundAmmoLeft;
     public AudioClip reloadSoundAmmoRunOut;
+    public AudioClip reloadShotgunOpen;
+    public AudioClip reloadShotgunInsert;
+    public AudioClip reloadShotgunClose;
 }
 
 
@@ -46,16 +49,17 @@ public class Weapon_AutomaticGun : Weapon
     public int maxSparkEmission = 7;
 
     [Header("Gun feature")]
+    public bool isSilence; // 枪械是否装载消音器
     public float range;
     public float fireRate;
+    public int shotgunFragment;
     public int bulletMag; //弹匣子弹数
+    public int bulletLeft; //备弹
     private int currentBullet; // 当前所剩子弹
-    private int bulletLeft; //备弹
     private float SpreadFactor; //射击的偏移量
     private float originRate; //原始射速
     private float fireTimer; //计时器控制射速
     private float bulletForce; //子弹发射的力
-    public bool isSilence; // 枪械是否装载消音器
     private bool gunShoot;
     private bool isReload;
     private bool isAmming;
@@ -87,6 +91,10 @@ public class Weapon_AutomaticGun : Weapon
 
     public PlayerMovement.MovementState state;
 
+    [Header("Sniper features")]
+    public Material scopeRenderMaterial;
+    public Color fadeColor;
+    public Color defaultColor;
 
 
     private void Start()
@@ -181,15 +189,26 @@ public class Weapon_AutomaticGun : Weapon
         }
 
         //实现换弹操作
-        bool reloadAmmoLeft = anim.GetCurrentAnimatorStateInfo(0).IsName("reloadAmmoLeft");
-        bool reloadOutOfAmmo = anim.GetCurrentAnimatorStateInfo(0).IsName("reloadOutOfAmmo");
+        AnimatorStateInfo info = anim.GetCurrentAnimatorStateInfo(0);
 
-        if (reloadOutOfAmmo || reloadAmmoLeft)
+        if (
+            info.IsName("reloadAmmoLeft") || 
+            info.IsName("reloadOutOfAmmo") ||
+            info.IsName("reload_open") ||
+            info.IsName("reload_insert") ||
+            info.IsName("reload_close") 
+            )
         {
             isReload = true;
         }
         else
         {
+            isReload = false;
+        }
+
+        if(info.IsName("reload_insert") && currentBullet == bulletMag)
+        {
+            anim.Play("reload_close");
             isReload = false;
         }
 
@@ -262,20 +281,32 @@ public class Weapon_AutomaticGun : Weapon
         muzzleFlash.Emit(1);
         muzzleSpark.Emit(Random.Range(minSparkEmission, maxSparkEmission));
 
-
-        RaycastHit hit;
-        Vector3 shootDirect = BulletShootPoint.forward;
-
-        shootDirect = shootDirect + BulletShootPoint.TransformDirection(new Vector3(Random.Range(-SpreadFactor, SpreadFactor), Random.Range(-SpreadFactor, SpreadFactor)));
-        if (Physics.Raycast(BulletShootPoint.position, shootDirect, out hit, range))
+        for (int i = 0; i < shotgunFragment; i++)
         {
-            Transform bullet = Instantiate(bulletPrefab, BulletShootPoint.transform.position, BulletShootPoint.transform.rotation);
-            
-            //给子弹代预制的方向上一个速度
-            //bullet.transform.LookAt(hit.point);
-            bullet.GetComponent<Rigidbody>().velocity = (bullet.transform.forward + shootDirect) * bulletForce;
-            Debug.Log(hit.transform.gameObject.name + "打到了");
+            RaycastHit hit;
+            Vector3 shootDirect = BulletShootPoint.forward;
+
+            shootDirect = shootDirect + BulletShootPoint.TransformDirection(new Vector3(Random.Range(-SpreadFactor, SpreadFactor), Random.Range(-SpreadFactor, SpreadFactor)));
+            if (Physics.Raycast(BulletShootPoint.position, shootDirect, out hit, range))
+            {
+                Transform bullet;
+                if (gameObject.name == "3")
+                {
+                    //霰弹枪特殊处理下将子弹限制位置设定到hit.point
+                    bullet = Instantiate(bulletPrefab, hit.point, Quaternion.FromToRotation(Vector3.up, hit.normal));
+                }
+                else
+                {
+                    bullet = Instantiate(bulletPrefab, BulletShootPoint.transform.position, BulletShootPoint.transform.rotation);
+                }
+                
+                //给子弹代预制的方向上一个速度
+                //bullet.transform.LookAt(hit.point);
+                bullet.GetComponent<Rigidbody>().velocity = (bullet.transform.forward + shootDirect) * bulletForce;
+                Debug.Log(hit.transform.gameObject.name + "打到了");
+            }
         }
+
 
         //播放射击动画
         if (!isAmming)
@@ -322,6 +353,13 @@ public class Weapon_AutomaticGun : Weapon
             crossQuarterImges[i].gameObject.SetActive(false);
         }
 
+        //如果是狙击枪
+        if(gameObject.name == "4")
+        {
+            scopeRenderMaterial.color = defaultColor;
+            gunCamera.fieldOfView = 15;
+        }
+
         //改变视野，视野变近
         mainCamera.fieldOfView = Mathf.SmoothDamp(30, 60, ref currentVelocity, 0.3f);
 
@@ -340,6 +378,13 @@ public class Weapon_AutomaticGun : Weapon
             crossQuarterImges[i].gameObject.SetActive(true);
         }
 
+        //如果是狙击枪
+        if (gameObject.name == "4")
+        {
+            scopeRenderMaterial.color = fadeColor;
+            gunCamera.fieldOfView = 50;
+        }
+
         //改变视野，视野变远
         mainCamera.fieldOfView = Mathf.SmoothDamp(60, 30, ref currentVelocity, 0.3f);
 
@@ -349,22 +394,31 @@ public class Weapon_AutomaticGun : Weapon
      * 换弹控制函数
      * DoReloadAnimation()：播放不同的换弹动画
      * Reload()：填装弹药逻辑，在动画当中调用
+     * ShotgunReload(): 霰弹枪添加子弹。
      */
     public override void DoReloadAnimation()
     {
-        if(currentBullet > 0 && bulletLeft > 0)
+        if(gameObject.name != "3" && gameObject.name != "4")
         {
-            anim.Play("reloadAmmoLeft");
-            Reload();
-            mainAudioSource.clip = GunSound.reloadSoundAmmoLeft;
-            mainAudioSource.Play();
+            if(currentBullet > 0 && bulletLeft > 0)
+            {
+                anim.Play("reloadAmmoLeft");
+                Reload();
+                mainAudioSource.clip = GunSound.reloadSoundAmmoLeft;
+                mainAudioSource.Play();
+            }
+            else if (currentBullet == 0 && bulletLeft > 0)
+            {
+                anim.Play("reloadOutOfAmmo");
+                Reload();
+                mainAudioSource.clip = GunSound.reloadSoundAmmoRunOut;
+                mainAudioSource.Play();
+            }
         }
-        else if (currentBullet == 0 && bulletLeft > 0)
+        else
         {
-            anim.Play("reloadOutOfAmmo");
-            Reload();
-            mainAudioSource.clip = GunSound.reloadSoundAmmoRunOut;
-            mainAudioSource.Play();
+            if (currentBullet == bulletMag) return;
+            anim.SetTrigger("shotgun_reload");
         }
     }
 
@@ -395,6 +449,28 @@ public class Weapon_AutomaticGun : Weapon
         UpdateAmmoUI();
     }
 
+    public void ShotgunReload()
+    {
+        if((currentBullet < bulletMag) && bulletLeft > 0)
+        {
+            currentBullet++;
+            bulletLeft--;
+            UpdateAmmoUI();
+            anim.Play("reload_insert");
+        }
+        else
+        {
+            anim.Play("reload_close");
+            return;
+        }
+
+        if(bulletLeft <= 0) return;
+    }
+
+    public void SniperReload()
+    {
+
+    }
     /*
      * UI控制函数
      */

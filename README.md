@@ -203,3 +203,38 @@
    -0.1 下，0 不动， 0.1 上。
 
 2. 当一些通用功能制作完毕之后制作新的一个类似功能的游戏物品真的很快。枪械的复刻很容易，除非有特殊功能的枪械以外。其他的很方便。
+
+
+
+## Development Day 6: 2023.11.24
+
+​	今天修复了下蹲之后的抬头的bug，其实不是很复杂，只要设定一个位置让模型的父物体一直跟随在那个位置就可以成功解决这个问题。脚本也只是多了一个`Controller`。层访问过这个物体的代码，也从寻找`Player`的子物体变成直接`GameObject.Find()`就可以了，其实变相还容易了不少。
+
+​	目前还存在的bug就是开镜问题，开镜之后开的枪，弹孔显示的是一个位置，可以关镜之后，弹孔出现在了别的地方，且无法通过调整射击点或者`Gun Camera`的方式来改正（因为关镜之后弹孔出现的位置是准确的，开镜的时候是错误的，调整射击点`ShootPoint`会让腰射和开镜射击的弹孔位置错误，调整`Gun Camera`的位置不会影响弹孔的位置）。目前唯一的头绪，弹孔的渲染是渲染在了某个固定的`Camera`上，目前还没有去查找和修改这个问题。
+
+1. 如果写了一个要根据动画播放进度来使用的函数，那么就将他放入播放脚本当中，绑定到动画上。
+
+2. `stateInfo.normalizedTime`是动画的标准化时间，1为动画末尾，0.5为动画的中间。图形化界面的`Exit Time`就是使用这个标准化时间来确定的。
+
+   ```
+       //OnStateUpdate is called on each Update frame between OnStateEnter and OnStateExit callbacks
+       override public void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+       {
+           if (hasReload)
+           {
+               return;
+           }
+   
+           if (stateInfo.normalizedTime)
+           {
+   			if (animator.GetComponent<Weapon_AutomaticGun>() != null)
+               {
+                   animator.GetComponent<Weapon_AutomaticGun>().ShotgunReload();
+               }
+               hasReload = true;
+           }
+       }
+   ```
+
+3. `Transform.eulerAngles`： 以欧拉角表示的旋转（以度为单位）。表示世界坐标内的旋转。欧拉角可以通过围绕各个轴执行三个单独的旋转来表示三维旋转。在 Unity 中，围绕 Z 轴、X 轴和 Y 轴（按该顺序）执行这些旋转。
+
