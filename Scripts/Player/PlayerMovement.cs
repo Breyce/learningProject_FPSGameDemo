@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Search;
+using UnityEngine.UI;
 using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
@@ -47,16 +48,17 @@ public class PlayerMovement : MonoBehaviour
     public LayerMask whatIsGround;
     bool grounded;
 
+    [Header("Player features")]
     public Transform orientation;
-
+    public Vector3 moveDirection;
+    public Rigidbody thRB;
+    public float playerHealth; // 玩家生命值
+    public Text playerHealthUI;
+    private Inventory inventory;
+    private bool isDead; // 判断玩家是否死亡
+    private bool isDamage; // 判断玩家是否受伤
     float horizontalInput;
     float verticalInput;
-
-    public Vector3 moveDirection;
-
-    public Rigidbody thRB;
-
-    private Inventory inventory;
 
     //移动状态
     public MovementState state;
@@ -70,6 +72,7 @@ public class PlayerMovement : MonoBehaviour
 
     void Start()
     {
+        playerHealth = 100;
         thRB = GetComponent<Rigidbody>();
         inventory = GameObject.Find("Inventory").GetComponent<Inventory>();
 
@@ -80,6 +83,8 @@ public class PlayerMovement : MonoBehaviour
         isWalk = false;
 
         startYScale = transform.localScale.y;
+
+        PlayerHealth(0);
     }
 
     void Update()
@@ -363,6 +368,22 @@ public class PlayerMovement : MonoBehaviour
         else
         {
             inventory.AddWeapon(weapon);
+        }
+    }
+
+    /// <summary>
+    /// 玩家受伤函数
+    /// </summary>
+    public void PlayerHealth(float damage)
+    {
+        playerHealth -= damage;
+        isDamage = true;
+        playerHealthUI.text = "HEALTH: " + playerHealth;
+        if(playerHealth <= 0)
+        {
+            isDead = true;
+            playerHealthUI.text = "玩家死亡";
+            Time.timeScale = 0; // 游戏暂停
         }
     }
 }
