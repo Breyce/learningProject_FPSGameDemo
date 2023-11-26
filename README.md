@@ -280,3 +280,30 @@
       所以我的解决办法是将`Mutant`那些成功生成的骨骼的动画，它们其中一个生成的骨骼绑定到`T-pose`的`Mutant`模型上。（既然都是同一个模型，骨骼应该都是一样的叭，我这么猜着拖上去的，确实没问题，后来测试也没什么问题）。
 
       ![image-20231125174637388](Images/解决Avatar问题.png)
+
+
+
+## Development Day 8: 2023.11.26
+
+今天发现了一个代码问题，在Unity当中不能直接通过如下格式来实例化一个类：
+
+```
+    public PatrolState patrolState = new PatrolState(); //定义敌人巡逻状态
+    public AttackState attackState = new AttackState(); //定义敌人攻击状态
+```
+
+这样在Unity自己的解析器里是不允许的，具体原因比较复杂，但简单来说就是，类似这样类的继承和获取之后的实例化，应该用如下方法来使用：
+
+```
+    patrolState = transform.gameObject.AddComponent<PatrolState>();
+    attackState = transform.gameObject.AddComponent<AttackState>();
+```
+
+另外现在有一个比较小的问题，就是敌人在攻击玩家的时候不会定在玩家的Camera之外，而是会铁道脸上，穿模攻击。这点需要优化，看看如何才能实现即便敌人追踪到脸上，也是停留在一定距离之外，最起码在玩家Camera里面能完整展示的位置对玩家进行攻击。
+
+1. `List.RemoveAt()`：返回数组当中指定的一个项，参数为索引，返回类型为void。
+2. 利用Unity自带的滑块UI实现血条效果：
+   - 删除Handle Slide Area模块；
+   - 调整其他组件的背景颜色；
+   - 调整其Canvas的渲染模式为World Space，其他三个参数可以在手册中查询；
+   - 将Fill Area和Fill的位置值全部调为0；

@@ -55,6 +55,8 @@ public class Weapon_AutomaticGun : Weapon
     public int shotgunFragment;
     public int bulletMag; //弹匣子弹数
     public int bulletLeft; //备弹
+    public float minDamage;
+    public float maxDamage;
     private int currentBullet; // 当前所剩子弹
     private float SpreadFactor; //射击的偏移量
     private float originRate; //原始射速
@@ -299,7 +301,14 @@ public class Weapon_AutomaticGun : Weapon
                 {
                     bullet = Instantiate(bulletPrefab, BulletShootPoint.transform.position, BulletShootPoint.transform.rotation);
                 }
-                
+
+
+                //如果击中敌人
+                if (hit.transform.gameObject.transform.tag == "Enemy")
+                {
+                    hit.transform.gameObject.GetComponent<Enemy>().Health(Random.Range(minDamage,maxDamage));
+                }
+
                 //给子弹代预制的方向上一个速度
                 //bullet.transform.LookAt(hit.point);
                 bullet.GetComponent<Rigidbody>().velocity = (bullet.transform.forward + shootDirect) * bulletForce;

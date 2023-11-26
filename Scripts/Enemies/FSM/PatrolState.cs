@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -11,7 +12,7 @@ public class PatrolState : EnemyBaseState
     {
         enemy.animState = 0; 
         //加载路线
-        enemy.LoadPath(enemy.wayPointObj[0]);
+        enemy.LoadPath(enemy.wayPointObj[WayPointManager.instance.usingIndex[enemy.nameIndex]]);
     }
 
     public override void OnUpdate(Enemy enemy)
@@ -23,7 +24,7 @@ public class PatrolState : EnemyBaseState
             enemy.animState = 1;
         }
 
-        if(enemy.animState == 1) enemy.MoveToTarget();
+        if(enemy.animState == 1) enemy.MoveToTarget(enemy.wayPoints[enemy.index]);
         //计算敌人和导航点的距离
         float distance = Vector3.Distance(enemy.transform.position, enemy.wayPoints[enemy.index]);
 
@@ -42,5 +43,10 @@ public class PatrolState : EnemyBaseState
         //Debug.Log(distance);
 
         //敌人巡逻扫描范围内出现敌人，此时进入攻击状态
+        if (enemy.attackList.Count > 0)
+        {
+            enemy.TransitionToState(enemy.attackState);
+        }
+
     }
 }
