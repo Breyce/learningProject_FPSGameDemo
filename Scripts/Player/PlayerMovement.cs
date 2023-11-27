@@ -54,6 +54,9 @@ public class PlayerMovement : MonoBehaviour
     public Rigidbody thRB;
     public float playerHealth; // 玩家生命值
     public Text playerHealthUI;
+    public Image hurtImage;
+    private Color flashColor = Color.red;
+    private Color clearColor = Color.clear;
     private Inventory inventory;
     private bool isDead; // 判断玩家是否死亡
     private bool isDamage; // 判断玩家是否受伤
@@ -72,6 +75,7 @@ public class PlayerMovement : MonoBehaviour
 
     void Start()
     {
+        hurtImage.color = Color.clear;
         playerHealth = 100;
         thRB = GetComponent<Rigidbody>();
         inventory = GameObject.Find("Inventory").GetComponent<Inventory>();
@@ -84,11 +88,26 @@ public class PlayerMovement : MonoBehaviour
 
         startYScale = transform.localScale.y;
 
+        playerHealthUI.text = "HEALTH: " + playerHealth;
+
         PlayerHealth(0);
     }
 
     void Update()
     {
+        if (isDamage)
+        {
+            hurtImage.color = flashColor;
+            //Debug.Log("isDamage");
+        }
+        else
+        {
+            hurtImage.color = Color.Lerp(hurtImage.color, clearColor, Time.deltaTime * 5) ;
+        }
+        isDamage = false ;
+
+        if (isDead) { return; }
+
         //检查是否在地面上
         grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.4f, whatIsGround);
 
@@ -105,6 +124,7 @@ public class PlayerMovement : MonoBehaviour
         {
             thRB.drag = 0;
         }
+
     }
 
     void FixedUpdate()
@@ -376,6 +396,7 @@ public class PlayerMovement : MonoBehaviour
     /// </summary>
     public void PlayerHealth(float damage)
     {
+        if (damage == 0) return;
         playerHealth -= damage;
         isDamage = true;
         playerHealthUI.text = "HEALTH: " + playerHealth;
@@ -386,4 +407,6 @@ public class PlayerMovement : MonoBehaviour
             Time.timeScale = 0; // 游戏暂停
         }
     }
+
+    public bool IsDead { get { return isDead; } }
 }

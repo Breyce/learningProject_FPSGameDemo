@@ -135,6 +135,13 @@ public class Weapon_AutomaticGun : Weapon
 
     private void Update()
     {
+        if (componentPlayer.IsDead)
+        {
+            mainAudioSource.Pause();
+            AudioManager.instance.PauseAllSound();
+        }
+
+
         //×´Ì¬»ú¼ì²â
         StateHandler();
 

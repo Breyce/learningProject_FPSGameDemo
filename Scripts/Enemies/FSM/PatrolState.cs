@@ -18,7 +18,7 @@ public class PatrolState : EnemyBaseState
     public override void OnUpdate(Enemy enemy)
     {
         //判断当前是否还在播放静止动画
-        Debug.Log(enemy.animator.GetCurrentAnimatorStateInfo(0).IsName("Idle"));
+        //Debug.Log(enemy.animator.GetCurrentAnimatorStateInfo(0).IsName("Idle"));
         if (enemy.animator.GetCurrentAnimatorStateInfo(0).IsName("Idle") && enemy.animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 0.95)
         {
             enemy.animState = 1;

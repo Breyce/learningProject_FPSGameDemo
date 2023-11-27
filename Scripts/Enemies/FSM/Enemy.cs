@@ -52,6 +52,7 @@ public class Enemy : MonoBehaviour
     void Start()
     {
         //获取组件
+        audioSource = GetComponent<AudioSource>();
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
         patrolState = transform.gameObject.AddComponent<PatrolState>();
@@ -82,17 +83,15 @@ public class Enemy : MonoBehaviour
     /// </summary>
     public void MoveToTarget(Vector3 targetPoint)
     {
-        //if (attackList.Count == 0)
-        //{
-        //    targetPosition = Vector3.MoveTowards(transform.position, wayPoints[index], agent.speed * Time.deltaTime);
-        //}
-        //else
-        //{
-        //    //扫描到玩家
-        //    targetPosition = Vector3.MoveTowards(transform.position, attackList[0].transform.position, agent.speed * Time.deltaTime * 3);
-        //}
         if (attackList.Count == 0)
+        {
+            Debug.Log("在这里");
+            Debug.Log(agent.name + "目的地targetPoint：" + targetPoint);
+            Debug.Log(agent.name + " transform.name：" + transform.name + " transform.position：" + transform.position);
+            Debug.Log(agent.name + " agent.speed * Time.deltaTime：" + agent.speed * Time.deltaTime);
             targetPosition = Vector3.MoveTowards(transform.position, targetPoint, agent.speed * Time.deltaTime);
+            Debug.Log(agent.name + "当前agent目的地Vector3：" + Vector3.MoveTowards(transform.position, targetPoint, agent.speed * Time.deltaTime));
+        }
         else
             targetPosition = Vector3.MoveTowards(transform.position, targetPoint, agent.speed * Time.deltaTime);
 
@@ -163,12 +162,23 @@ public class Enemy : MonoBehaviour
         }
     }
 
+    public void PlayAttackSound()
+    {
+        audioSource.clip = attackSound;
+        audioSource.Play();
+    }
+
     /// <summary>
     /// Boss攻击方法
     /// </summary>
     public void PlayerMutantAttackEffect()
     {
-
+        if(gameObject.name == "Mutant")
+        {
+            GameObject partical01 = Instantiate(attackParticle01, attackParticle01Position.transform.position, attackParticle01Position.transform.rotation);
+            PlayAttackSound();
+            Destroy(partical01, 3f);
+        }
 
     }
 

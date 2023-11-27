@@ -307,3 +307,33 @@
    - 调整其他组件的背景颜色；
    - 调整其Canvas的渲染模式为World Space，其他三个参数可以在手册中查询；
    - 将Fill Area和Fill的位置值全部调为0；
+
+
+
+## Development Day 9: 2023.11.27
+
+​	今天结项了，不过还有两个bug，一个是骑士攻击角色的时候会穿模，另一个是Mutant不移动。穿模可以通过拉远判定距离，减小移动速度。以此排除惯性影响和提前进入动画时间。但是Mutant的问题，我无法解决，我输出了这么几个数据：
+
+```C#
+Debug.Log("在这里");
+Debug.Log(agent.name + "目的地targetPoint：" + targetPoint);
+Debug.Log(agent.name + " transform.name：" + transform.name + " transform.position：" + transform.position);
+Debug.Log(agent.name + " agent.speed * Time.deltaTime：" + agent.speed * Time.deltaTime);
+
+targetPosition = Vector3.MoveTowards(transform.position, targetPoint, agent.speed * Time.deltaTime);
+
+Debug.Log(agent.name + "当前agent目的地Vector3：" + Vector3.MoveTowards(transform.position, targetPoint, agent.speed * Time.deltaTime));
+```
+
+​	而它的输出是这样的：
+
+```
+在这里
+Mutant目的地targetPoint：(12.01,1.00,-3.51)
+Mutant transform.name：Mutant transform.position：(-2.15, -1.00, -2.14)
+Mutant agent.speed * Time.deltaTime： 0.09998
+
+Mutant当前agent目的地Vector3：(-2.01, -1.14, -3.14)
+```
+
+​	所以我不知道，Vector3的输出是错误的，很不明白。因为这就意味着，Vector3.MoveTowards()没有执行。这真的不能理解。所以我不理解，就先放着了。

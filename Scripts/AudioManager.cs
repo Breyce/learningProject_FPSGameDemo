@@ -42,4 +42,20 @@ public class AudioManager : MonoBehaviour
                 soundEffectsNeedStop[i].Pause();
         }
     }
+
+    public void PauseAllSound()
+    {
+        for (int i = 0; i < soundEffectsNeedStop.Length; i++)
+        {
+            if (soundEffectsNeedStop[i].isPlaying)
+                //Í£Ö¹
+                soundEffectsNeedStop[i].Pause();
+        }
+        for (int i = 0; i < soundEffectsNoNeedStop.Length; i++)
+        {
+            if (soundEffectsNoNeedStop[i].isPlaying)
+                //ÔÙ²¥·Å
+                soundEffectsNoNeedStop[i].Pause();
+        }
+    }
 }
